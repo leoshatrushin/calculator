@@ -1,16 +1,27 @@
 const OPERATIONS = ['+', '-', '×', '÷', '='];
 
-let clearOnNext = false;
-let errorOnOperation;
-let stack;
-let previousOperation;
+let inputtingFirstOperand;
+let inputtingNewOperand;
+let firstOperand;
+let operation;
+let secondOperand;
 
 function clear() {
-    errorOnOperation = false;
-    stack = [{ operation: null, value: 0 }];
-    previousOperation = '=';
+    inputtingFirstOperand = true;
+    inputtingNewOperand = true;
+    firstOperand = 0;
+    operation = null;
+    secondOperand = 0;
 }
 clear();
+
+function updateFirstOperand(displayText) {
+    if (displayText == 'Error') {
+        firstOperand = null;
+    } else {
+        firstOperand = Number.parseFloat(displayText);
+    }
+}
 
 const buttons = document.querySelector('.buttons');
 buttons.addEventListener('click', function (event) {
@@ -19,37 +30,30 @@ buttons.addEventListener('click', function (event) {
     const displayText = display.innerText;
 
     if (OPERATIONS.includes(action)) {
-        clearOnNext = true;
-        if (errorOnOperation && action !== '=') {
-            clear();
-            display.innerText = 'Syntax Error';
-            return;
+        if (inputtingFirstOperand) {
+            updateFirstOperand(displayText);
+        } else {
+            secondOperand = Number.parseFloat(displayText);
         }
 
-        if (previousOperation == '=') {
-            stack[0].value = Number.parseFloat(displayText);
-        } else {
-            stack.push({
-                operation: previousOperation,
-                value: Number.parseFloat(displayText),
-            });
+        executeLastOperation = !inputtingFirstOperand && !inputtingNewOperand;
+        if (action === '=' || executeLastOperation) {
+            updateFirstOperand(handleOperation(display));
         }
-        previousOperation = action;
 
         if (action === '=') {
-            display.innerText = evalStack();
+            inputtingFirstOperand = true;
         } else {
-            errorOnOperation = true;
+            operation = action;
+            inputtingFirstOperand = false;
         }
-        return;
-    } else {
-        errorOnOperation = false;
-    }
 
-    if (/\d/.test(action)) {
-        if (displayText === '0' || clearOnNext) {
+        inputtingNewOperand = true;
+        return;
+    } else if (/\d/.test(action)) {
+        if (inputtingNewOperand || displayText === '0') {
             display.innerText = action;
-            clearOnNext = false;
+            inputtingNewOperand = false;
         } else {
             display.innerText += action;
         }
@@ -57,7 +61,7 @@ buttons.addEventListener('click', function (event) {
         display.innerText = '0';
         clear();
     } else if (action === '←') {
-        if (displayText.length === 1 || clearOnNext) {
+        if (displayText.length === 1 || inputtingNewOperand) {
             display.innerText = '0';
         } else {
             display.innerText = displayText.slice(0, -1);
@@ -65,32 +69,27 @@ buttons.addEventListener('click', function (event) {
     }
 });
 
-function evalStack() {
-    for (let i = 1; i < stack.length; i++) {
-        if (stack[i].operation === '×') {
-            stack[i - 1].value *= stack[i].value;
-            stack.splice(i, 1);
-            i--;
-        } else if (stack[i].operation === '÷') {
-            if (stack[i].value === 0) {
-                clear();
-                return 'Divide by 0 Error';
-            }
-            stack[i - 1].value /= stack[i].value;
-            stack.splice(i, 1);
-            i--;
+function handleOperation(display) {
+    let result;
+    if (firstOperand === null) {
+        clear();
+        result = 'Error';
+    } else if (operation === '+') {
+        result = firstOperand + secondOperand;
+    } else if (operation === '-') {
+        result = firstOperand - secondOperand;
+    } else if (operation === '×') {
+        result = firstOperand * secondOperand;
+    } else if (operation === '÷') {
+        if (secondOperand === 0) {
+            clear();
+            result = 'Error';
+        } else {
+            result = firstOperand / secondOperand;
         }
+    } else {
+        result = firstOperand;
     }
-    for (let i = 1; i < stack.length; i++) {
-        if (stack[i].operation === '+') {
-            stack[i - 1].value += stack[i].value;
-            stack.splice(i, 1);
-            i--;
-        } else if (stack[i].operation === '-') {
-            stack[i - 1].value -= stack[i].value;
-            stack.splice(i, 1);
-            i--;
-        }
-    }
-    return stack[0].value;
+    display.innerText = result;
+    return result;
 }
