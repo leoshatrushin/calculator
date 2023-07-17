@@ -1,95 +1,123 @@
-const OPERATIONS = ['+', '-', '×', '÷', '='];
+const OPERATORS = ['+', '-', '×', '÷', '='];
+const display = document.querySelector('.display');
 
 let inputtingFirstOperand;
 let inputtingNewOperand;
 let firstOperand;
-let operation;
+let operator;
 let secondOperand;
+let buffer;
 
 function clear() {
     inputtingFirstOperand = true;
     inputtingNewOperand = true;
     firstOperand = 0;
-    operation = null;
+    operator = null;
     secondOperand = 0;
+    buffer = '0';
 }
 clear();
 
-function updateFirstOperand(displayText) {
-    if (displayText == 'Error') {
+function updateFirstOperand(value) {
+    if (value == 'Error') {
         firstOperand = null;
     } else {
-        firstOperand = Number.parseFloat(displayText);
+        firstOperand = Number.parseFloat(value);
     }
 }
 
-const buttons = document.querySelector('.buttons');
-buttons.addEventListener('click', function (event) {
-    const action = event.target.innerText;
-    const display = document.querySelector('.display');
-    const displayText = display.innerText;
-
-    if (OPERATIONS.includes(action)) {
-        if (inputtingFirstOperand) {
-            updateFirstOperand(displayText);
-        } else {
-            secondOperand = Number.parseFloat(displayText);
-        }
-
-        executeLastOperation = !inputtingFirstOperand && !inputtingNewOperand;
-        if (action === '=' || executeLastOperation) {
-            updateFirstOperand(handleOperation(display));
-        }
-
-        if (action === '=') {
-            inputtingFirstOperand = true;
-        } else {
-            operation = action;
-            inputtingFirstOperand = false;
-        }
-
-        inputtingNewOperand = true;
-        return;
-    } else if (/\d/.test(action)) {
-        if (inputtingNewOperand || displayText === '0') {
-            display.innerText = action;
-            inputtingNewOperand = false;
-        } else {
-            display.innerText += action;
-        }
-    } else if (action === 'C') {
-        display.innerText = '0';
-        clear();
-    } else if (action === '←') {
-        if (displayText.length === 1 || inputtingNewOperand) {
-            display.innerText = '0';
-        } else {
-            display.innerText = displayText.slice(0, -1);
-        }
-    }
+document.querySelector('.buttons').addEventListener('click', function(event) {
+    buttonClick(event.target.innerText);
+    rerender();
 });
 
-function handleOperation(display) {
-    let result;
+function buttonClick(action) {
+    switch (action) {
+        case 'C':
+            clear();
+            break;
+        case '←':
+            backspaceClick();
+            break;
+        default:
+            if (OPERATORS.includes(action)) {
+                operatorClick(action);
+            } else if (/\d/.test(action)) {
+                digitClick(action);
+            }
+    }
+}
+
+function operatorClick(action) {
+    if (inputtingFirstOperand) {
+        updateFirstOperand(buffer);
+    } else {
+        secondOperand = Number.parseFloat(buffer);
+    }
+
+    executeLastOperation = !inputtingFirstOperand && !inputtingNewOperand;
+    if (action === '=' || executeLastOperation) {
+        updateFirstOperand(handleOperation(display));
+    }
+
+    if (action === '=') {
+        inputtingFirstOperand = true;
+    } else {
+        operator = action;
+        inputtingFirstOperand = false;
+    }
+
+    inputtingNewOperand = true;
+}
+
+function digitClick(digit) {
+    if (inputtingNewOperand || buffer === '0') {
+        buffer = digit;
+        inputtingNewOperand = false;
+    } else {
+        buffer = buffer + digit;
+    }
+}
+
+function backspaceClick() {
+    if (buffer.length === 1 || inputtingNewOperand) {
+        buffer = '0';
+    } else {
+        buffer = buffer.slice(0, -1);
+    }
+}
+
+function handleOperation() {
     if (firstOperand === null) {
         clear();
-        result = 'Error';
-    } else if (operation === '+') {
-        result = firstOperand + secondOperand;
-    } else if (operation === '-') {
-        result = firstOperand - secondOperand;
-    } else if (operation === '×') {
-        result = firstOperand * secondOperand;
-    } else if (operation === '÷') {
-        if (secondOperand === 0) {
-            clear();
-            result = 'Error';
-        } else {
-            result = firstOperand / secondOperand;
-        }
+        buffer = 'Error';
     } else {
-        result = firstOperand;
+        switch (operator) {
+            case null:
+                buffer = '' + firstOperand;
+                break;
+            case '+':
+                buffer = '' + firstOperand + secondOperand;
+                break;
+            case '-':
+                buffer = '' + firstOperand - secondOperand;
+                break;
+            case '×':
+                buffer = '' + firstOperand * secondOperand;
+                break;
+            case '÷':
+                if (secondOperand === 0) {
+                    clear();
+                    buffer = 'Error';
+                } else {
+                    buffer = '' + firstOperand / secondOperand;
+                }
+                break;
+        }
     }
-    display.innerText = result;
-    return result;
+    return buffer;
+}
+
+function rerender() {
+    display.innerText = buffer;
 }

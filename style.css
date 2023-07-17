@@ -34,6 +34,7 @@ body {
     padding: 0;
     border: none;
     background-color: #d8d9db;
+    cursor: pointer;
 }
 
 .button:hover {
@@ -58,19 +59,19 @@ body {
     font-size: 40px;
 }
 
-.span-2 {
+.double {
     grid-column: span 2;
 }
 
-.span-2::before {
+.double::before {
     padding-bottom: 0;
 }
 
-.span-3 {
+.triple {
     grid-column: span 3;
 }
 
-.span-3::before {
+.triple::before {
     padding-bottom: 0;
 }
 
