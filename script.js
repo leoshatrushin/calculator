@@ -27,6 +27,7 @@ function updateFirstOperand(value) {
 }
 
 document.querySelector('.buttons').addEventListener('click', function(event) {
+    if (event.target.tagName !== 'SPAN') return;
     buttonClick(event.target.innerText);
     rerender();
 });
@@ -94,27 +95,28 @@ function handleOperation() {
     } else {
         switch (operator) {
             case null:
-                buffer = '' + firstOperand;
+                result = firstOperand;
                 break;
             case '+':
-                buffer = '' + firstOperand + secondOperand;
+                result = firstOperand + secondOperand;
                 break;
             case '-':
-                buffer = '' + firstOperand - secondOperand;
+                result = firstOperand - secondOperand;
                 break;
             case '×':
-                buffer = '' + firstOperand * secondOperand;
+                result = firstOperand * secondOperand;
                 break;
             case '÷':
                 if (secondOperand === 0) {
                     clear();
                     buffer = 'Error';
                 } else {
-                    buffer = '' + firstOperand / secondOperand;
+                    result = firstOperand / secondOperand;
                 }
                 break;
         }
     }
+    buffer = '' + result;
     return buffer;
 }
 
